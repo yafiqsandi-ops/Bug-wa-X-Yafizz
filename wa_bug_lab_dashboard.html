@@ -1,0 +1,1031 @@
+<!DOCTYPE html>
+<html lang="id" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WA BUG LAB - Cyber Tech UI Simulator</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;800&family=Orbitron:wght@500;700;900&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        cyber: {
+                            black: '#07090e',
+                            darker: '#0c0f17',
+                            card: '#121722',
+                            border: 'rgba(0, 255, 136, 0.2)',
+                            green: '#00ff88',
+                            greenGlow: 'rgba(0, 255, 136, 0.4)',
+                            cyan: '#00f0ff',
+                            cyanGlow: 'rgba(0, 240, 255, 0.4)',
+                            red: '#ff0055',
+                            accent: '#1f293d'
+                        }
+                    },
+                    fontFamily: {
+                        orbitron: ['Orbitron', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                        sans: ['Space Grotesk', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Custom Cyberpunk & Glassmorphic Styles */
+        body {
+            background-color: #07090e;
+            color: #e2e8f0;
+            font-family: 'Space Grotesk', sans-serif;
+            overflow-x: hidden;
+        }
+
+        /* Glassmorphism Card */
+        .glass-panel {
+            background: rgba(18, 23, 34, 0.75);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(0, 255, 136, 0.15);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+
+        .glass-panel-cyan {
+            background: rgba(18, 23, 34, 0.75);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(0, 240, 255, 0.2);
+        }
+
+        /* Neon Glowing Elements */
+        .neon-border-green {
+            box-shadow: 0 0 15px rgba(0, 255, 136, 0.25), inset 0 0 10px rgba(0, 255, 136, 0.1);
+        }
+
+        .neon-glow-btn {
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.4);
+            transition: all 0.3s ease;
+        }
+
+        .neon-glow-btn:hover {
+            box-shadow: 0 0 35px rgba(0, 255, 136, 0.7);
+            transform: translateY(-2px);
+        }
+
+        .neon-text-green {
+            text-shadow: 0 0 10px rgba(0, 255, 136, 0.6);
+        }
+
+        .neon-text-cyan {
+            text-shadow: 0 0 10px rgba(0, 240, 255, 0.6);
+        }
+
+        /* Glitch Animation Keyframes */
+        @keyframes glitch-anim {
+            0% { transform: translate(0) }
+            20% { transform: translate(-2px, 2px) }
+            40% { transform: translate(-2px, -2px) }
+            60% { transform: translate(2px, 2px) }
+            80% { transform: translate(2px, -2px) }
+            100% { transform: translate(0) }
+        }
+
+        .animate-glitch {
+            animation: glitch-anim 0.2s ease infinite;
+        }
+
+        @keyframes scanline {
+            0% { transform: translateY(-100%); }
+            100% { transform: translateY(1000%); }
+        }
+
+        .scanline-effect {
+            position: absolute;
+            top: 0; left: 0; right: 0; height: 4px;
+            background: linear-gradient(to bottom, transparent, rgba(0, 255, 136, 0.4), transparent);
+            animation: scanline 4s linear infinite;
+            pointer-events: none;
+        }
+
+        /* Grid Background Overlay */
+        .cyber-grid {
+            background-size: 40px 40px;
+            background-image: 
+                linear-gradient(to right, rgba(0, 255, 136, 0.03) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(0, 255, 136, 0.03) 1px, transparent 1px);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #07090e;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(0, 255, 136, 0.3);
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(0, 255, 136, 0.6);
+        }
+
+        /* Custom Range Slider */
+        input[type=range] {
+            accent-color: #00ff88;
+        }
+    </style>
+</head>
+<body class="cyber-grid min-h-screen flex flex-col relative selection:bg-cyber-green selection:text-black">
+
+    <!-- Background Canvas Grid Matrix Effect -->
+    <canvas id="bgCanvas" class="fixed top-0 left-0 w-full h-full pointer-events-none z-0 opacity-20"></canvas>
+
+    <!-- Top Navigation Header -->
+    <header class="sticky top-0 z-40 glass-panel border-b border-cyber-green/20 px-4 lg:px-8 py-3">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+            <!-- Brand Logo -->
+            <div class="flex items-center gap-3">
+                <div class="relative w-10 h-10 rounded-xl bg-cyber-darker border border-cyber-green/40 flex items-center justify-center neon-border-green">
+                    <i class="fa-solid me-0 fa-bug text-cyber-green text-xl animate-pulse"></i>
+                    <span class="absolute -top-1 -right-1 w-2.5 h-2.5 bg-cyber-green rounded-full animate-ping"></span>
+                </div>
+                <div>
+                    <h1 class="font-orbitron font-extrabold text-xl lg:text-2xl tracking-wider text-white flex items-center gap-2">
+                        WA BUG <span class="text-cyber-green neon-text-green">LAB</span>
+                        <span class="text-xs font-mono font-normal px-2 py-0.5 rounded border border-cyber-cyan/40 text-cyber-cyan bg-cyber-cyan/10 hidden sm:inline-block">v3.4-PROD</span>
+                    </h1>
+                    <p class="text-xs text-gray-400 font-mono">Cyber Tech Protocol Simulator Sandbox</p>
+                </div>
+            </div>
+
+            <!-- Right Header Controls -->
+            <div class="flex items-center gap-3">
+                <!-- System Status Indicator -->
+                <div class="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-cyber-darker border border-cyber-green/20 font-mono text-xs">
+                    <span class="w-2 h-2 rounded-full bg-cyber-green animate-pulse"></span>
+                    <span class="text-gray-300">SYSTEM:</span>
+                    <span class="text-cyber-green font-bold">SANDBOX READY</span>
+                </div>
+
+                <!-- Audio FX Toggle Button -->
+                <button id="audioToggleBtn" onclick="toggleAudio()" class="px-3 py-1.5 rounded-lg bg-cyber-darker border border-cyber-green/30 text-cyber-green hover:bg-cyber-green/10 transition-all flex items-center gap-2 text-xs font-mono">
+                    <i id="audioIcon" class="fa-solid fa-volume-high"></i>
+                    <span id="audioText" class="hidden sm:inline">AUDIO: ON</span>
+                </button>
+
+                <!-- Navigation Quick Links -->
+                <a href="#simulator" class="px-3 py-1.5 rounded-lg bg-cyber-green/20 border border-cyber-green text-cyber-green hover:bg-cyber-green hover:text-black transition-all font-mono text-xs font-bold">
+                    LAB PANEL
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Disclaimer & Safety Banner -->
+    <div class="bg-cyber-darker border-b border-cyber-green/10 py-2 px-4 text-center z-30">
+        <div class="max-w-7xl mx-auto flex items-center justify-center gap-2 text-xs text-gray-400 font-mono">
+            <i class="fa-solid fa-shield-halved text-cyber-cyan"></i>
+            <span><strong class="text-cyber-cyan">SAFE DEMO ENVIRONMENT:</strong> Browser-only simulation engine. No actual WhatsApp messages, network packets, or exploits are sent.</span>
+        </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <main class="flex-grow max-w-7xl w-full mx-auto p-4 lg:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 z-10 relative">
+
+        <!-- LEFT PANEL: Controls & Settings (7 Cols) -->
+        <section class="lg:col-span-7 flex flex-col gap-6">
+
+            <!-- Control Box Panel -->
+            <div class="glass-panel rounded-2xl p-5 lg:p-6 relative overflow-hidden">
+                <div class="scanline-effect"></div>
+                
+                <div class="flex items-center justify-between mb-5 border-b border-cyber-green/15 pb-3">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-sliders text-cyber-green"></i>
+                        <h2 class="font-orbitron font-bold text-lg text-white tracking-wide">SIMULATION CONTROLLER</h2>
+                    </div>
+                    <span class="text-xs font-mono text-gray-400">CONFIG_ID: #88209</span>
+                </div>
+
+                <!-- Input Target Phone Number -->
+                <div class="mb-5">
+                    <label class="block text-xs font-mono text-cyber-green mb-2 flex justify-between">
+                        <span>TARGET DEMO NUMBER (SIMULATION DIRECTORY)</span>
+                        <span class="text-gray-400">FORMAT: +62 8XX-XXXX-XXXX</span>
+                    </label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-cyber-green">
+                            <i class="fa-solid fa-phone"></i>
+                        </div>
+                        <input type="text" id="targetNumber" value="+62 812-3456-7890" 
+                            class="w-full pl-10 pr-4 py-3 bg-cyber-darker/90 border border-cyber-green/30 rounded-xl text-white font-mono focus:border-cyber-green focus:ring-1 focus:ring-cyber-green focus:outline-none transition-all"
+                            placeholder="+62 8XX-XXXX-XXXX" oninput="formatPhoneNumber(this)">
+                    </div>
+                    <p class="text-[11px] text-gray-400 mt-1 font-mono">
+                        <i class="fa-solid fa-circle-info text-cyber-cyan mr-1"></i>Nomor ini hanya digunakan untuk tampilan visual UI di kanvas preview.
+                    </p>
+                </div>
+
+                <!-- Simulation Mode Selector -->
+                <div class="mb-5">
+                    <label class="block text-xs font-mono text-cyber-green mb-2">
+                        SELECT SIMULATION PROTOCOL
+                    </label>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3" id="modeSelectorContainer">
+                        
+                        <!-- Mode 1: Text Glitch -->
+                        <div onclick="selectMode('text')" id="mode-text" class="mode-card cursor-pointer rounded-xl p-3.5 bg-cyber-darker border border-cyber-green/40 hover:border-cyber-green transition-all relative overflow-hidden group">
+                            <div class="flex items-start gap-3">
+                                <div class="p-2.5 rounded-lg bg-cyber-green/10 text-cyber-green group-hover:bg-cyber-green group-hover:text-black transition-all">
+                                    <i class="fa-solid fa-font text-lg"></i>
+                                </div>
+                                <div>
+                                    <h3 class="font-bold text-sm text-white group-hover:text-cyber-green transition-colors">Text Glitch</h3>
+                                    <p class="text-xs text-gray-400 mt-0.5">Unicode zalgo string rendering stress.</p>
+                                </div>
+                            </div>
+                            <div class="absolute top-2 right-2 hidden check-icon text-cyber-green"><i class="fa-solid fa-circle-check"></i></div>
+                        </div>
+
+                        <!-- Mode 2: Emoji Glitch -->
+                        <div onclick="selectMode('emoji')" id="mode-emoji" class="mode-card cursor-pointer rounded-xl p-3.5 bg-cyber-darker border border-white/10 hover:border-cyber-green transition-all relative overflow-hidden group">
+                            <div class="flex items-start gap-3">
+                                <div class="p-2.5 rounded-lg bg-cyber-cyan/10 text-cyber-cyan group-hover:bg-cyber-cyan group-hover:text-black transition-all">
+                                    <i class="fa-regular fa-face-flushed text-lg"></i>
+                                </div>
+                                <div>
+                                    <h3 class="font-bold text-sm text-white group-hover:text-cyber-cyan transition-colors">Emoji Overflow</h3>
+                                    <p class="text-xs text-gray-400 mt-0.5">Infinite emoji array memory simulation.</p>
+                                </div>
+                            </div>
+                            <div class="absolute top-2 right-2 hidden check-icon text-cyber-cyan"><i class="fa-solid fa-circle-check"></i></div>
+                        </div>
+
+                        <!-- Mode 3: Message Preview -->
+                        <div onclick="selectMode('preview')" id="mode-preview" class="mode-card cursor-pointer rounded-xl p-3.5 bg-cyber-darker border border-white/10 hover:border-cyber-green transition-all relative overflow-hidden group">
+                            <div class="flex items-start gap-3">
+                                <div class="p-2.5 rounded-lg bg-purple-500/10 text-purple-400 group-hover:bg-purple-500 group-hover:text-black transition-all">
+                                    <i class="fa-solid fa-[#00ff88] fa-envelope-open-text text-lg"></i>
+                                </div>
+                                <div>
+                                    <h3 class="font-bold text-sm text-white group-hover:text-purple-400 transition-colors">Payload Truncation</h3>
+                                    <p class="text-xs text-gray-400 mt-0.5">Heavy bubble string truncation test.</p>
+                                </div>
+                            </div>
+                            <div class="absolute top-2 right-2 hidden check-icon text-purple-400"><i class="fa-solid fa-circle-check"></i></div>
+                        </div>
+
+                        <!-- Mode 4: UI Stress Test -->
+                        <div onclick="selectMode('stress')" id="mode-stress" class="mode-card cursor-pointer rounded-xl p-3.5 bg-cyber-darker border border-white/10 hover:border-cyber-green transition-all relative overflow-hidden group">
+                            <div class="flex items-start gap-3">
+                                <div class="p-2.5 rounded-lg bg-cyber-red/10 text-cyber-red group-hover:bg-cyber-red group-hover:text-white transition-all">
+                                    <i class="fa-solid fa-microchip text-lg"></i>
+                                </div>
+                                <div>
+                                    <h3 class="font-bold text-sm text-white group-hover:text-cyber-red transition-colors">UI Stress Test</h3>
+                                    <p class="text-xs text-gray-400 mt-0.5">Frame rate drop & visual noise matrix.</p>
+                                </div>
+                            </div>
+                            <div class="absolute top-2 right-2 hidden check-icon text-cyber-red"><i class="fa-solid fa-circle-check"></i></div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- Fine Tuning Parameters Sliders -->
+                <div class="space-y-4 mb-6 bg-cyber-darker/60 p-4 rounded-xl border border-white/5">
+                    <h4 class="text-xs font-mono text-gray-300 font-semibold flex items-center gap-2">
+                        <i class="fa-solid fa-sliders text-cyber-cyan"></i> PARAMETER TUNING
+                    </h4>
+                    
+                    <!-- Intensity Slider -->
+                    <div>
+                        <div class="flex justify-between text-xs font-mono mb-1">
+                            <span class="text-gray-400">Payload Load Intensity:</span>
+                            <span id="intensityVal" class="text-cyber-green font-bold">75%</span>
+                        </div>
+                        <input type="range" id="intensitySlider" min="10" max="100" value="75" class="w-full h-1.5 bg-gray-800 rounded-lg appearance-none cursor-pointer" oninput="updateSliderVal('intensityVal', this.value + '%')">
+                    </div>
+
+                    <!-- Delay Slider -->
+                    <div>
+                        <div class="flex justify-between text-xs font-mono mb-1">
+                            <span class="text-gray-400">Buffer Render Duration:</span>
+                            <span id="durationVal" class="text-cyber-cyan font-bold">2.5s</span>
+                        </div>
+                        <input type="range" id="durationSlider" min="1" max="5" step="0.5" value="2.5" class="w-full h-1.5 bg-gray-800 rounded-lg appearance-none cursor-pointer" oninput="updateSliderVal('durationVal', this.value + 's')">
+                    </div>
+                </div>
+
+                <!-- Action Controls Buttons -->
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <button id="startSimBtn" onclick="runSimulation()" class="flex-grow py-3.5 px-6 rounded-xl bg-cyber-green text-black font-orbitron font-extrabold text-sm tracking-wider flex items-center justify-center gap-2 neon-glow-btn hover:bg-emerald-400 transition-all cursor-pointer">
+                        <i class="fa-solid fa-play"></i> START SIMULATION
+                    </button>
+                    <button onclick="resetSimulation()" class="py-3.5 px-5 rounded-xl bg-cyber-darker border border-cyber-green/30 text-gray-300 font-mono text-xs hover:border-cyber-green hover:text-cyber-green transition-all flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-rotate-left"></i> RESET
+                    </button>
+                </div>
+
+            </div>
+
+            <!-- Simulation Log History Table -->
+            <div class="glass-panel rounded-2xl p-5 lg:p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-clock-rotate-left text-cyber-cyan"></i>
+                        <h2 class="font-orbitron font-bold text-base text-white tracking-wide">SIMULATION HISTORY</h2>
+                    </div>
+                    <button onclick="clearHistory()" class="text-xs font-mono text-red-400 hover:text-red-300 transition-colors flex items-center gap-1">
+                        <i class="fa-solid fa-trash-can"></i> CLEAR
+                    </button>
+                </div>
+
+                <!-- History Table Container -->
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left font-mono text-xs">
+                        <thead>
+                            <tr class="border-b border-cyber-green/10 text-gray-400">
+                                <th class="pb-2">TIMESTAMP</th>
+                                <th class="pb-2">PROTOCOL</th>
+                                <th class="pb-2">TARGET DEMO</th>
+                                <th class="pb-2">STATUS</th>
+                            </tr>
+                        </thead>
+                        <tbody id="historyTableBody" class="divide-y divide-white/5 text-gray-300">
+                            <!-- Dynamic rows rendered via JS -->
+                            <tr id="emptyHistoryRow">
+                                <td colspan="4" class="py-6 text-center text-gray-500">
+                                    Belum ada riwayat simulasi yang dijalankan.
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </section>
+
+
+        <!-- RIGHT PANEL: Interactive Phone Visual Mockup Sandbox (5 Cols) -->
+        <section class="lg:col-span-5 flex flex-col gap-6">
+
+            <div class="glass-panel rounded-3xl p-4 lg:p-6 sticky top-24 flex flex-col items-center border-cyber-cyan/30">
+                <div class="w-full flex items-center justify-between mb-3 border-b border-cyber-cyan/20 pb-2">
+                    <div class="flex items-center gap-2">
+                        <span class="w-2.5 h-2.5 rounded-full bg-cyber-green animate-ping"></span>
+                        <span class="font-orbitron font-bold text-xs text-cyber-cyan tracking-wider">CANVAS PREVIEW FRAME</span>
+                    </div>
+                    <span class="text-[10px] font-mono bg-cyber-cyan/10 border border-cyber-cyan/30 text-cyber-cyan px-2 py-0.5 rounded">
+                        MOCKUP v2.0
+                    </span>
+                </div>
+
+                <!-- Phone Device Frame -->
+                <div class="w-full max-w-[340px] bg-[#0b141a] rounded-[36px] border-[6px] border-gray-800 shadow-2xl overflow-hidden relative flex flex-col min-h-[560px] my-2 neon-border-green">
+                    
+                    <!-- Phone Camera Notch / Dynamic Island -->
+                    <div class="w-full bg-[#111b21] pt-3 pb-2 px-6 flex justify-between items-center text-gray-400 text-xs z-20">
+                        <span id="phoneClock" class="font-mono text-[11px] font-bold">12:00</span>
+                        <div class="w-16 h-3.5 bg-black rounded-full flex items-center justify-center">
+                            <div class="w-2 h-2 rounded-full bg-blue-900/50"></div>
+                        </div>
+                        <div class="flex items-center gap-1.5 text-[10px]">
+                            <i class="fa-solid fa-wifi"></i>
+                            <i class="fa-solid fa-battery-full text-cyber-green"></i>
+                        </div>
+                    </div>
+
+                    <!-- WhatsApp Header -->
+                    <div class="bg-[#202c33] px-3 py-2.5 flex items-center gap-3 border-b border-gray-700/50 z-20">
+                        <div class="relative">
+                            <div class="w-9 h-9 rounded-full bg-cyber-green/20 border border-cyber-green flex items-center justify-center text-cyber-green font-bold font-mono">
+                                <i class="fa-solid fa-user-ninja"></i>
+                            </div>
+                            <span class="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-cyber-green border-2 border-[#202c33]"></span>
+                        </div>
+                        <div class="flex-grow overflow-hidden">
+                            <h4 id="previewName" class="text-white font-bold text-xs truncate">Target Demo</h4>
+                            <p id="previewNumberDisplay" class="text-gray-400 text-[10px] font-mono truncate">+62 812-3456-7890</p>
+                        </div>
+                        <div class="flex items-center gap-3 text-gray-300 text-xs">
+                            <i class="fa-solid fa-video"></i>
+                            <i class="fa-solid fa-phone"></i>
+                            <i class="fa-solid fa-ellipsis-vertical"></i>
+                        </div>
+                    </div>
+
+                    <!-- Chat Wallpaper & Messages Screen -->
+                    <div id="chatWindow" class="flex-grow bg-[#0b141a] p-3 flex flex-col justify-between relative overflow-y-auto font-sans text-xs">
+                        
+                        <!-- Chat Background Pattern Simulation -->
+                        <div class="absolute inset-0 opacity-5 pointer-events-none bg-[radial-gradient(#00ff88_1px,transparent_1px)] [background-size:16px_16px]"></div>
+
+                        <!-- Date Badge -->
+                        <div class="text-center my-2 z-10">
+                            <span class="bg-[#111b21] text-gray-400 text-[10px] px-3 py-1 rounded-md font-mono border border-gray-800">
+                                TODAY - SIMULATION ENVIRONMENT
+                            </span>
+                        </div>
+
+                        <!-- Messages Container -->
+                        <div id="messagesContainer" class="space-y-3 z-10 my-auto">
+                            
+                            <!-- System Intro Message -->
+                            <div class="bg-[#202c33] text-gray-200 p-3 rounded-xl rounded-tl-none max-w-[85%] text-[11px] shadow border border-gray-700/40">
+                                <p class="text-cyber-green font-mono font-bold text-[10px] mb-1">WA BUG LAB SYSTEM:</p>
+                                Ready for protocol stress simulation. Silakan klik <strong>START SIMULATION</strong> untuk memulai demonstrasi visual.
+                                <span class="block text-right text-[9px] text-gray-400 mt-1">12:00 PM</span>
+                            </div>
+
+                            <!-- Dynamic Simulated Message Bubble (Target for Glitch Render) -->
+                            <div id="simulatedBubble" class="hidden bg-[#005c4b] text-white p-3 rounded-xl rounded-tr-none max-w-[90%] ml-auto text-[11px] shadow transition-all duration-300 relative">
+                                <div id="simulatedContent" class="break-words font-mono">
+                                    <!-- Dynamic Payload Text Here -->
+                                </div>
+                                <div class="flex justify-end items-center gap-1 text-[9px] text-emerald-200 mt-1">
+                                    <span id="simTime">12:01 PM</span>
+                                    <i class="fa-solid fa-check-double text-cyber-cyan"></i>
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <!-- WhatsApp Input Area -->
+                        <div class="mt-2 bg-[#202c33] rounded-full px-3 py-1.5 flex items-center gap-2 border border-gray-700/40 z-20">
+                            <i class="fa-regular fa-face-smile text-gray-400"></i>
+                            <input type="text" readonly placeholder="Message simulation locked..." class="bg-transparent text-xs text-gray-300 focus:outline-none flex-grow font-mono">
+                            <i class="fa-solid fa-paperclip text-gray-400"></i>
+                            <div class="w-7 h-7 rounded-full bg-cyber-green flex items-center justify-center text-black font-bold">
+                                <i class="fa-solid fa-microphone text-xs"></i>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- Canvas Visual Noise Matrix Overlay (For UI Stress Mode) -->
+                    <canvas id="glitchCanvas" class="absolute inset-0 w-full h-full pointer-events-none opacity-0 z-30 transition-opacity duration-200"></canvas>
+                </div>
+
+                <!-- Preview Info Footer -->
+                <div class="w-full mt-2 text-center">
+                    <p class="text-[11px] text-gray-400 font-mono">
+                        <span class="text-cyber-green">● LIVE RENDER FRAME</span> - 60 FPS Canvas Buffer
+                    </p>
+                </div>
+
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="mt-auto border-t border-cyber-green/10 glass-panel py-4 px-6 text-center text-xs text-gray-500 font-mono z-10">
+        <div class="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-2">
+            <div>
+                © 2026 <span class="text-cyber-green font-bold">WA BUG LAB</span>. All rights reserved.
+            </div>
+            <div class="flex gap-4">
+                <span class="text-gray-400">Security Sandbox</span>
+                <span class="text-gray-400">UI/UX Test Suite</span>
+                <span class="text-cyber-cyan">Strictly Educational</span>
+            </div>
+        </div>
+    </footer>
+
+
+    <!-- SIMULATION PROGRESS MODAL TERMINAL -->
+    <div id="simModal" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4 opacity-0 pointer-events-none transition-all duration-300">
+        <div class="glass-panel border-cyber-green/40 max-w-lg w-full rounded-2xl p-6 shadow-2xl relative overflow-hidden">
+            
+            <div class="scanline-effect"></div>
+
+            <!-- Modal Header -->
+            <div class="flex items-center justify-between border-b border-cyber-green/20 pb-3 mb-4">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-terminal text-cyber-green animate-pulse"></i>
+                    <h3 class="font-orbitron font-bold text-white text-base">PROTOCOL EXECUTION</h3>
+                </div>
+                <span id="modalModeTag" class="text-xs font-mono px-2.5 py-0.5 rounded bg-cyber-green/10 border border-cyber-green text-cyber-green">
+                    TEXT_GLITCH
+                </span>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="mb-4">
+                <div class="flex justify-between text-xs font-mono mb-1">
+                    <span class="text-gray-300">Simulating Payload Buffer...</span>
+                    <span id="progressPercent" class="text-cyber-green font-bold">0%</span>
+                </div>
+                <div class="w-full h-3 bg-cyber-darker rounded-full overflow-hidden p-0.5 border border-cyber-green/30">
+                    <div id="progressBar" class="h-full bg-gradient-to-r from-cyber-green to-cyber-cyan rounded-full w-0 transition-all duration-200"></div>
+                </div>
+            </div>
+
+            <!-- Terminal Log Console Output -->
+            <div id="terminalLog" class="h-44 bg-black/90 rounded-xl p-3 font-mono text-xs text-cyber-green border border-cyber-green/20 overflow-y-auto space-y-1 mb-5">
+                <p class="text-gray-500">> Initializing Sandbox Context...</p>
+            </div>
+
+            <!-- Close / Abort Action -->
+            <div class="flex justify-end">
+                <button id="abortBtn" onclick="abortSimulation()" class="px-4 py-2 rounded-xl bg-cyber-red/20 border border-cyber-red text-cyber-red hover:bg-cyber-red hover:text-white font-mono text-xs transition-all">
+                    ABORT SIMULATION
+                </button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- FLOATING TOAST NOTIFICATION SYSTEM CONTAINER -->
+    <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+
+    <!-- JAVASCRIPT LOGIC ENGINE -->
+    <script>
+        /* ==========================================================================
+           STATE MANAGEMENT & VARIABLES
+           ========================================================================== */
+        let activeMode = 'text';
+        let audioEnabled = true;
+        let isSimulating = false;
+        let simInterval = null;
+        let historyData = [];
+        let audioCtx = null;
+
+        /* ==========================================================================
+           WEB AUDIO API SYNTHESIZER (NO EXTERNAL FILES REQUIRED)
+           ========================================================================== */
+        function initAudio() {
+            if (!audioCtx) {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                audioCtx = new AudioContext();
+            }
+        }
+
+        function playSound(type) {
+            if (!audioEnabled) return;
+            try {
+                initAudio();
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                const now = audioCtx.currentTime;
+
+                if (type === 'click') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(800, now);
+                    osc.frequency.exponentialRampToValueAtTime(400, now + 0.05);
+                    gain.gain.setValueAtTime(0.15, now);
+                    gain.gain.linearRampToValueAtTime(0.01, now + 0.05);
+                    osc.start(now);
+                    osc.stop(now + 0.05);
+                } else if (type === 'scan') {
+                    osc.type = 'square';
+                    osc.frequency.setValueAtTime(200, now);
+                    osc.frequency.linearRampToValueAtTime(600, now + 0.1);
+                    gain.gain.setValueAtTime(0.05, now);
+                    gain.gain.linearRampToValueAtTime(0.01, now + 0.1);
+                    osc.start(now);
+                    osc.stop(now + 0.1);
+                } else if (type === 'complete') {
+                    // Success Chime (Two-tone)
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(523.25, now); // C5
+                    osc.frequency.setValueAtTime(659.25, now + 0.1); // E5
+                    gain.gain.setValueAtTime(0.2, now);
+                    gain.gain.linearRampToValueAtTime(0.01, now + 0.3);
+                    osc.start(now);
+                    osc.stop(now + 0.3);
+                } else if (type === 'glitch') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(100 + Math.random() * 500, now);
+                    gain.gain.setValueAtTime(0.1, now);
+                    gain.gain.linearRampToValueAtTime(0.01, now + 0.08);
+                    osc.start(now);
+                    osc.stop(now + 0.08);
+                }
+            } catch (e) {
+                console.log('Audio playback prevented or unsupported');
+            }
+        }
+
+        function toggleAudio() {
+            audioEnabled = !audioEnabled;
+            const icon = document.getElementById('audioIcon');
+            const text = document.getElementById('audioText');
+            
+            if (audioEnabled) {
+                icon.className = "fa-solid fa-volume-high";
+                text.innerText = "AUDIO: ON";
+                showToast('Audio Synth Enabled', 'success');
+                playSound('click');
+            } else {
+                icon.className = "fa-solid fa-volume-xmark";
+                text.innerText = "AUDIO: OFF";
+                showToast('Audio Synth Muted', 'info');
+            }
+        }
+
+        /* ==========================================================================
+           UI MODE SELECTION & INTERACTIVE CONTROLS
+           ========================================================================== */
+        function selectMode(mode) {
+            playSound('click');
+            activeMode = mode;
+            
+            // Reset all cards styling
+            const modes = ['text', 'emoji', 'preview', 'stress'];
+            modes.forEach(m => {
+                const card = document.getElementById(`mode-${m}`);
+                const check = card.querySelector('.check-icon');
+                card.classList.remove('border-cyber-green', 'neon-border-green');
+                card.classList.add('border-white/10');
+                if (check) check.classList.add('hidden');
+            });
+
+            // Highlight selected card
+            const activeCard = document.getElementById(`mode-${mode}`);
+            activeCard.classList.remove('border-white/10');
+            activeCard.classList.add('border-cyber-green', 'neon-border-green');
+            const check = activeCard.querySelector('.check-icon');
+            if (check) check.classList.remove('hidden');
+
+            showToast(`Protocol selected: ${mode.toUpperCase()} MODE`, 'info');
+        }
+
+        function updateSliderVal(elementId, value) {
+            document.getElementById(elementId).innerText = value;
+        }
+
+        function formatPhoneNumber(input) {
+            let val = input.value.replace(/[^\d+]/g, '');
+            input.value = val;
+            document.getElementById('previewNumberDisplay').innerText = val || '+62 8XX-XXXX-XXXX';
+        }
+
+        /* ==========================================================================
+           SIMULATION RUNNER & SIMULATED PAYLOAD GENERATORS
+           ========================================================================== */
+        function generateZalgoText(text) {
+            const zalgoChars = ['\u0300', '\u0301', '\u0302', '\u0303', '\u0304', '\u0305', '\u0306', '\u0307', '\u0308', '\u0309', '\u030A', '\u030B', '\u030C', '\u030D', '\u030E', '\u030F', '\u0310'];
+            let result = '';
+            for (let i = 0; i < text.length; i++) {
+                result += text[i];
+                const count = Math.floor(Math.random() * 6) + 2;
+                for (let j = 0; j < count; j++) {
+                    result += zalgoChars[Math.floor(Math.random() * zalgoChars.length)];
+                }
+            }
+            return result;
+        }
+
+        function generateEmojiOverflow() {
+            const emojis = ['💥', '💀', '👾', '⚠️', '⚡', '💣', '☣️', '🤖', '❌', '🌀'];
+            let str = '';
+            for (let i = 0; i < 85; i++) {
+                str += emojis[Math.floor(Math.random() * emojis.length)];
+            }
+            return str;
+        }
+
+        function runSimulation() {
+            if (isSimulating) return;
+
+            initAudio();
+            playSound('click');
+
+            const targetNum = document.getElementById('targetNumber').value.trim();
+            if (!targetNum) {
+                showToast('Harap masukkan nomor WhatsApp target!', 'warning');
+                return;
+            }
+
+            isSimulating = true;
+            const duration = parseFloat(document.getElementById('durationSlider').value) * 1000;
+            const intensity = parseInt(document.getElementById('intensitySlider').value);
+
+            // Show Terminal Modal
+            const modal = document.getElementById('simModal');
+            const modalTag = document.getElementById('modalModeTag');
+            modalTag.innerText = activeMode.toUpperCase() + '_PROTOCOL';
+            modal.classList.remove('opacity-0', 'pointer-events-none');
+
+            const progressBar = document.getElementById('progressBar');
+            const progressPercent = document.getElementById('progressPercent');
+            const terminalLog = document.getElementById('terminalLog');
+            
+            terminalLog.innerHTML = `<p class="text-gray-500">> Initializing sandbox protocol for target: ${targetNum}</p>`;
+            progressBar.style.width = '0%';
+            progressPercent.innerText = '0%';
+
+            let progress = 0;
+            const stepTime = 100;
+            const increment = 100 / (duration / stepTime);
+
+            const logs = [
+                `Allocation buffer memory: ${intensity * 128} KB...`,
+                `Simulating WhatsApp unicode parser...`,
+                `Executing string truncation stress test...`,
+                `Testing UI thread latency & DOM reflows...`,
+                `Sandbox safety verification: PASS`
+            ];
+
+            let logIndex = 0;
+
+            simInterval = setInterval(() => {
+                progress += increment;
+                if (progress > 100) progress = 100;
+
+                progressBar.style.width = `${progress}%`;
+                progressPercent.innerText = `${Math.floor(progress)}%`;
+
+                playSound('scan');
+
+                // Periodically add log text
+                if (Math.floor(progress) > (logIndex + 1) * 18 && logIndex < logs.length) {
+                    const p = document.createElement('p');
+                    p.innerText = `> ${logs[logIndex]}`;
+                    terminalLog.appendChild(p);
+                    terminalLog.scrollTop = terminalLog.scrollHeight;
+                    logIndex++;
+                }
+
+                if (progress >= 100) {
+                    clearInterval(simInterval);
+                    setTimeout(() => {
+                        completeSimulation(targetNum, intensity);
+                    }, 400);
+                }
+            }, stepTime);
+        }
+
+        function abortSimulation() {
+            if (simInterval) clearInterval(simInterval);
+            isSimulating = false;
+            
+            const modal = document.getElementById('simModal');
+            modal.classList.add('opacity-0', 'pointer-events-none');
+            showToast('Simulasi dibatalkan oleh pengguna', 'warning');
+            playSound('click');
+        }
+
+        function completeSimulation(targetNum, intensity) {
+            isSimulating = false;
+
+            // Hide Modal
+            const modal = document.getElementById('simModal');
+            modal.classList.add('opacity-0', 'pointer-events-none');
+
+            // Render Result inside WhatsApp Chat Preview
+            const bubble = document.getElementById('simulatedBubble');
+            const content = document.getElementById('simulatedContent');
+            const canvas = document.getElementById('glitchCanvas');
+            
+            bubble.classList.remove('hidden', 'animate-glitch');
+            canvas.style.opacity = '0';
+
+            const now = new Date();
+            document.getElementById('simTime').innerText = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+            if (activeMode === 'text') {
+                content.innerText = generateZalgoText("WA BUG LAB - STRING CORRUPTION DEMO");
+                bubble.classList.add('animate-glitch');
+                playSound('glitch');
+            } else if (activeMode === 'emoji') {
+                content.innerText = generateEmojiOverflow();
+                playSound('glitch');
+            } else if (activeMode === 'preview') {
+                content.innerText = "PAYLOAD_OVERFLOW: " + "X".repeat(intensity * 3) + " [TRUNCATED] ...";
+                playSound('glitch');
+            } else if (activeMode === 'stress') {
+                content.innerText = "⚠️ UI STRESS TEST ACTIVE - MATRIX NOISE RUNNING";
+                triggerCanvasNoise();
+                playSound('glitch');
+            }
+
+            // Scroll chat to bottom
+            const chatWin = document.getElementById('chatWindow');
+            chatWin.scrollTop = chatWin.scrollHeight;
+
+            // Audio & Toast Feedback
+            playSound('complete');
+            showToast('Simulasi berhasil dijalankan!', 'success');
+
+            // Log to History
+            addHistoryRecord(activeMode, targetNum, `${intensity * 12} KB`);
+        }
+
+        function resetSimulation() {
+            playSound('click');
+            const bubble = document.getElementById('simulatedBubble');
+            bubble.classList.add('hidden');
+            
+            const canvas = document.getElementById('glitchCanvas');
+            canvas.style.opacity = '0';
+
+            showToast('Canvas preview di-reset ke kondisi awal', 'info');
+        }
+
+        /* ==========================================================================
+           CANVAS UI NOISE STRESS EFFECT
+           ========================================================================== */
+        function triggerCanvasNoise() {
+            const canvas = document.getElementById('glitchCanvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+            canvas.style.opacity = '0.6';
+
+            let frames = 0;
+            function drawNoise() {
+                if (frames > 25) {
+                    canvas.style.opacity = '0';
+                    return;
+                }
+                const imgData = ctx.createImageData(canvas.width, canvas.height);
+                const buffer = new Uint32Array(imgData.data.buffer);
+                for (let i = 0; i < buffer.length; i++) {
+                    if (Math.random() < 0.1) {
+                        buffer[i] = 0xff00ff88; // Neon Green pixels
+                    } else if (Math.random() < 0.05) {
+                        buffer[i] = 0xffff0000; // Cyan pixels
+                    }
+                }
+                ctx.putImageData(imgData, 0, 0);
+                frames++;
+                requestAnimationFrame(drawNoise);
+            }
+            drawNoise();
+        }
+
+        /* ==========================================================================
+           BACKGROUND MATRIX GRID CANVAS ANIMATION
+           ========================================================================== */
+        function initBgCanvas() {
+            const canvas = document.getElementById('bgCanvas');
+            const ctx = canvas.getContext('2d');
+
+            function resize() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            }
+            resize();
+            window.addEventListener('resize', resize);
+
+            const dots = [];
+            for (let i = 0; i < 45; i++) {
+                dots.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    radius: Math.random() * 1.5 + 1,
+                    vy: Math.random() * 0.5 + 0.2
+                });
+            }
+
+            function animate() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = '#00ff88';
+
+                dots.forEach(d => {
+                    d.y -= d.vy;
+                    if (d.y < 0) d.y = canvas.height;
+
+                    ctx.beginPath();
+                    ctx.arc(d.x, d.y, d.radius, 0, Math.PI * 2);
+                    ctx.fill();
+                });
+
+                requestAnimationFrame(animate);
+            }
+            animate();
+        }
+
+        /* ==========================================================================
+           HISTORY LOG SYSTEM
+           ========================================================================== */
+        function addHistoryRecord(mode, number, payloadSize) {
+            const record = {
+                time: new Date().toLocaleTimeString(),
+                mode: mode.toUpperCase(),
+                target: number,
+                size: payloadSize,
+                status: 'SAFE / PASSED'
+            };
+
+            historyData.unshift(record);
+            renderHistoryTable();
+        }
+
+        function renderHistoryTable() {
+            const tbody = document.getElementById('historyTableBody');
+            
+            if (historyData.length === 0) {
+                tbody.innerHTML = `
+                    <tr id="emptyHistoryRow">
+                        <td colspan="4" class="py-6 text-center text-gray-500">
+                            Belum ada riwayat simulasi yang dijalankan.
+                        </td>
+                    </tr>`;
+                return;
+            }
+
+            tbody.innerHTML = historyData.map(item => `
+                <tr class="hover:bg-cyber-green/5 transition-colors">
+                    <td class="py-2.5 text-gray-400">${item.time}</td>
+                    <td class="py-2.5">
+                        <span class="px-2 py-0.5 rounded text-[10px] font-bold ${
+                            item.mode === 'TEXT' ? 'bg-cyber-green/10 text-cyber-green border border-cyber-green/30' :
+                            item.mode === 'EMOJI' ? 'bg-cyber-cyan/10 text-cyber-cyan border border-cyber-cyan/30' :
+                            item.mode === 'PREVIEW' ? 'bg-purple-500/10 text-purple-400 border border-purple-500/30' :
+                            'bg-cyber-red/10 text-cyber-red border border-cyber-red/30'
+                        }">
+                            ${item.mode}
+                        </span>
+                    </td>
+                    <td class="py-2.5 text-gray-200">${item.target}</td>
+                    <td class="py-2.5 text-cyber-green flex items-center gap-1">
+                        <i class="fa-solid fa-circle-check text-[10px]"></i> ${item.status}
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function clearHistory() {
+            playSound('click');
+            historyData = [];
+            renderHistoryTable();
+            showToast('Riwayat simulasi berhasil dibersihkan', 'info');
+        }
+
+        /* ==========================================================================
+           FLOATING TOAST NOTIFICATION SYSTEM
+           ========================================================================== */
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            
+            const colorClass = type === 'success' ? 'border-cyber-green text-cyber-green' :
+                               type === 'warning' ? 'border-amber-400 text-amber-400' :
+                               'border-cyber-cyan text-cyber-cyan';
+
+            const iconClass = type === 'success' ? 'fa-circle-check' :
+                              type === 'warning' ? 'fa-triangle-exclamation' :
+                              'fa-circle-info';
+
+            toast.className = `glass-panel ${colorClass} border px-4 py-3 rounded-xl shadow-lg flex items-center gap-3 font-mono text-xs pointer-events-auto transition-all duration-300 transform translate-y-4 opacity-0`;
+            toast.innerHTML = `
+                <i class="fa-solid ${iconClass} text-sm"></i>
+                <span class="text-white">${message}</span>
+            `;
+
+            container.appendChild(toast);
+
+            // Trigger Animation
+            setTimeout(() => {
+                toast.classList.remove('translate-y-4', 'opacity-0');
+            }, 10);
+
+            // Auto Remove
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-2');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        /* ==========================================================================
+           INITIALIZATION ON WINDOW LOAD
+           ========================================================================== */
+        window.onload = function() {
+            initBgCanvas();
+            
+            // Set Live Clock on Simulated Phone
+            setInterval(() => {
+                const now = new Date();
+                document.getElementById('phoneClock').innerText = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            }, 1000);
+
+            // Select default mode styling
+            selectMode('text');
+        };
+    </script>
+</body>
+</html>
